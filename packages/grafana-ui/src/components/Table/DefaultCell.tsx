@@ -15,6 +15,8 @@ import { TableStyles } from './styles';
 import { TableCellProps, CustomCellRendererProps, TableCellOptions } from './types';
 import { getCellOptions } from './utils';
 
+const OG_TWEET_LENGTH = 140; // 🙏
+
 export const DefaultCell = (props: TableCellProps) => {
   const { field, cell, tableStyles, row, cellProps, frame } = props;
 
@@ -36,6 +38,7 @@ export const DefaultCell = (props: TableCellProps) => {
     setHover(true);
   };
 
+
   if (cellOptions.type === TableCellDisplayMode.Custom) {
     const CustomCellComponent: React.ComponentType<CustomCellRendererProps> = cellOptions.cellComponent;
     value = <CustomCellComponent field={field} value={cell.value} rowIndex={row.index} frame={frame} />;
@@ -49,7 +52,11 @@ export const DefaultCell = (props: TableCellProps) => {
 
   const isStringValue = typeof value === 'string';
 
-  const cellStyle = getCellStyle(tableStyles, cellOptions, displayValue, inspectEnabled, isStringValue);
+  // Determine if string should wrap on hover
+  const stringShouldWrap = displayValue.text.length < OG_TWEET_LENGTH && displayValue.text.search(/\s/) >= 0;
+
+  // Get cell styles
+  const cellStyle = getCellStyle(tableStyles, cellOptions, displayValue, true, isStringValue, stringShouldWrap);
 
   if (isStringValue) {
     let justifyContent = cellProps.style?.justifyContent;
@@ -61,11 +68,13 @@ export const DefaultCell = (props: TableCellProps) => {
     }
   }
 
+  // console.log({style: cellProps.style, stringShouldWrap, hover});
+
   return (
     <div
       {...cellProps}
-      onMouseEnter={showActions ? onMouseEnter : undefined}
-      onMouseLeave={showActions ? onMouseLeave : undefined}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       className={cellStyle}
     >
       {!hasLinks && (isStringValue ? `${value}` : <div className={tableStyles.cellText}>{value}</div>)}
@@ -99,7 +108,8 @@ function getCellStyle(
   cellOptions: TableCellOptions,
   displayValue: DisplayValue,
   disableOverflowOnHover = false,
-  isStringValue = false
+  isStringValue = false,
+  stringShouldWrap = false,
 ) {
   // How much to darken elements depends upon if we're in dark mode
   const darkeningFactor = tableStyles.theme.isDark ? 1 : -0.7;
@@ -124,21 +134,16 @@ function getCellStyle(
       bgColor = `linear-gradient(120deg, ${bgColor2.toRgbString()}, ${displayValue.color})`;
     }
   }
-
-  // const isLongString = isStringValue && displayValue.text.length > 100 && Number.isNaN(displayValue.numeric);
-  const isShortString = displayValue.text.length < 100 && displayValue.text.search(/\s/) >= 0;
-  console.log({text: displayValue.text, isShortString})
-
   // If we have definied colors return those styles
   // Otherwise we return default styles
   if (textColor !== undefined || bgColor !== undefined) {
-    return tableStyles.buildCellContainerStyle(textColor, bgColor, !disableOverflowOnHover, isStringValue, isShortString);
+    return tableStyles.buildCellContainerStyle(textColor, bgColor, !disableOverflowOnHover, isStringValue, stringShouldWrap);
   }
 
   if (isStringValue) {
-    return disableOverflowOnHover ? tableStyles.buildCellContainerStyle(undefined, undefined, true, true, isShortString) : tableStyles.cellContainerText;
+    return disableOverflowOnHover ? tableStyles.buildCellContainerStyle(undefined, undefined, true, true, stringShouldWrap) : tableStyles.cellContainerText;
   } else {
-    return disableOverflowOnHover ? tableStyles.cellContainerNoOverflow : tableStyles.cellContainer;
+    return disableOverflowOnHover ? tableStyles.buildCellContainerStyle(undefined, undefined, false, false, stringShouldWrap) : tableStyles.cellContainer;
   }
 }
 
