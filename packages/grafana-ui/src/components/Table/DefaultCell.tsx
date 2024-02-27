@@ -38,7 +38,6 @@ export const DefaultCell = (props: TableCellProps) => {
     setHover(true);
   };
 
-
   if (cellOptions.type === TableCellDisplayMode.Custom) {
     const CustomCellComponent: React.ComponentType<CustomCellRendererProps> = cellOptions.cellComponent;
     value = <CustomCellComponent field={field} value={cell.value} rowIndex={row.index} frame={frame} />;
@@ -71,12 +70,7 @@ export const DefaultCell = (props: TableCellProps) => {
   // console.log({style: cellProps.style, stringShouldWrap, hover});
 
   return (
-    <div
-      {...cellProps}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      className={cellStyle}
-    >
+    <div {...cellProps} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} className={cellStyle}>
       {!hasLinks && (isStringValue ? `${value}` : <div className={tableStyles.cellText}>{value}</div>)}
 
       {hasLinks && (
@@ -109,7 +103,7 @@ function getCellStyle(
   displayValue: DisplayValue,
   disableOverflowOnHover = false,
   isStringValue = false,
-  stringShouldWrap = false,
+  stringShouldWrap = false
 ) {
   // How much to darken elements depends upon if we're in dark mode
   const darkeningFactor = tableStyles.theme.isDark ? 1 : -0.7;
@@ -137,13 +131,23 @@ function getCellStyle(
   // If we have definied colors return those styles
   // Otherwise we return default styles
   if (textColor !== undefined || bgColor !== undefined) {
-    return tableStyles.buildCellContainerStyle(textColor, bgColor, !disableOverflowOnHover, isStringValue, stringShouldWrap);
+    return tableStyles.buildCellContainerStyle(
+      textColor,
+      bgColor,
+      !disableOverflowOnHover,
+      isStringValue,
+      stringShouldWrap
+    );
   }
 
   if (isStringValue) {
-    return disableOverflowOnHover ? tableStyles.buildCellContainerStyle(undefined, undefined, true, true, stringShouldWrap) : tableStyles.cellContainerText;
+    return disableOverflowOnHover
+      ? tableStyles.buildCellContainerStyle(undefined, undefined, true, true, stringShouldWrap)
+      : tableStyles.cellContainerText;
   } else {
-    return disableOverflowOnHover ? tableStyles.buildCellContainerStyle(undefined, undefined, false, false, stringShouldWrap) : tableStyles.cellContainer;
+    return disableOverflowOnHover
+      ? tableStyles.buildCellContainerStyle(undefined, undefined, false, false, stringShouldWrap)
+      : tableStyles.cellContainer;
   }
 }
 
